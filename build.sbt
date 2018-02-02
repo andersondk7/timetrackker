@@ -1,5 +1,5 @@
-//organization in ThisBuild := "org.dka.tutorials.lagom"
-organization in ThisBuild := "com.example"
+organization in ThisBuild := "org.dka.tutorials.lagom"
+//organization in ThisBuild := "com.example"
 version in ThisBuild := "1.0-SNAPSHOT"
 
 // the Scala version that will be used for cross-compiled libraries
@@ -9,16 +9,16 @@ val macwire = "com.softwaremill.macwire" %% "macros" % "2.3.0" % "provided"
 val scalaTest = "org.scalatest" %% "scalatest" % "3.0.4" % Test
 
 lazy val `timeTracker-root` = (project in file("."))
-  .aggregate(`timeTracker-api`, `timeTracker-impl`)
+  .aggregate(`person-api`, `person-impl`)
 
-lazy val `timeTracker-api` = (project in file("timeTracker-api"))
+lazy val `person-api` = (project in file("person-api"))
   .settings(
     libraryDependencies ++= Seq(
       lagomScaladslApi
     )
   )
 
-lazy val `timeTracker-impl` = (project in file("timeTracker-impl"))
+lazy val `person-impl` = (project in file("person-impl"))
   .enablePlugins(LagomScala)
   .settings(
     libraryDependencies ++= Seq(
@@ -30,6 +30,6 @@ lazy val `timeTracker-impl` = (project in file("timeTracker-impl"))
     )
   )
   .settings(lagomForkedTestSettings: _*)
-  .dependsOn(`timeTracker-api`)
+  .dependsOn(`person-api`)
 
 
