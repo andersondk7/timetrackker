@@ -32,4 +32,4 @@ lazy val `person-impl` = (project in file("person-impl"))
   .settings(lagomForkedTestSettings: _*)
   .dependsOn(`person-api`)
 
-
+lagomCassandraCleanOnStart in ThisBuild := true

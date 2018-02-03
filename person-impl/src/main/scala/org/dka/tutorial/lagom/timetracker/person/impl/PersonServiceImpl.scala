@@ -1,29 +1,33 @@
 package org.dka.tutorial.lagom.timetracker.person.impl
 
-import akka.NotUsed
-import com.lightbend.lagom.scaladsl.api.ServiceCall
-import org.dka.tutorial.lagom.timetracker.person.api.{PersonProfile, PersonService}
+import java.util.UUID
 
-import scala.collection.immutable.Seq
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import akka.{Done, NotUsed}
+import com.lightbend.lagom.scaladsl.api.ServiceCall
+import com.lightbend.lagom.scaladsl.persistence.PersistentEntityRegistry
+import org.dka.tutorial.lagom.timetracker.person.api.{PersonData, PersonProfile, PersonService}
 
 /**
+  * implementation of service
   */
-class PersonServiceImpl extends PersonService {
-  import PersonServiceImpl._
-  override def profile(id: String): ServiceCall[NotUsed, PersonProfile] = ServiceCall { _ => {
-    Future {
-      if (id == "internal") throw InternalError(id, new Exception("expected"))
-      else people.getOrElse(id, throw PersonNotFoundException(id))
-    }
-  }}
+class PersonServiceImpl(persistentEntityRegistry: PersistentEntityRegistry) extends PersonService {
+
+
+  override def profile(id: String): ServiceCall[NotUsed, PersonProfile] = ServiceCall { _ =>
+    val person = persistentEntityRegistry.refFor[Person](id)
+    person.ask(Profile)
+  }
+
+  override def create(): ServiceCall[PersonData, String] = ServiceCall { request =>
+    val id = UUID.randomUUID().toString
+    val person = persistentEntityRegistry.refFor[Person](id) // won't be there, so a new entry will be created
+    person.ask(Create(id, request))
+  }
+
+  override def updateName(id: String, name: String): ServiceCall[NotUsed, PersonProfile] = ServiceCall { request =>
+    val person = persistentEntityRegistry.refFor[Person](id)
+    person.ask(ChangeName(name))
+  }
 }
 
-object PersonServiceImpl {
-  val adam = PersonProfile("1", "Adam", "adam@workplace.org", Some("801-555-1234"))
-  val eve = PersonProfile("2", "Eve", "eve@workplace.org", Some("801-555-4321"))
-  val unknown = PersonProfile("0", "Unknown", "unknown@workplace.org")
-  val people: Map[String, PersonProfile] = Seq(adam, eve).map(p => p.id -> p).toMap
-}
 

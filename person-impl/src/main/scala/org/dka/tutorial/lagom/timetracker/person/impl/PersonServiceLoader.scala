@@ -4,44 +4,59 @@ import com.lightbend.lagom.scaladsl.api.ServiceLocator
 import com.lightbend.lagom.scaladsl.api.ServiceLocator.NoServiceLocator
 import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
 import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraPersistenceComponents
+import com.lightbend.lagom.scaladsl.playjson.{JsonSerializer, JsonSerializerRegistry}
 import com.lightbend.lagom.scaladsl.server.{LagomApplication, LagomApplicationContext, LagomApplicationLoader, LagomServer}
 import com.softwaremill.macwire._
 import org.dka.tutorial.lagom.timetracker.person.api.PersonService
+import play.api.libs.json.Json
 import play.api.libs.ws.ahc.AhcWSComponents
 
+import scala.collection.immutable
+
 /**
-  * load the [[PersonService]] application
+  * load the [[PersonApplication]] application
   *
-  * this must be enabled in the ```application.conf``` file by setting the ```play.applicaiton.loader```
+  * this must be enabled in the ```application.conf``` file by setting the ```play.application.loader```
   */
 class PersonServiceLoader extends LagomApplicationLoader {
   override def load(context: LagomApplicationContext): LagomApplication =
-    new TimeTrackerApplication(context) {
+    new PersonApplication(context) {
       override def serviceLocator: ServiceLocator = NoServiceLocator
     }
 
   override def loadDevMode(context: LagomApplicationContext): LagomApplication =
-    new TimeTrackerApplication(context) with LagomDevModeComponents
+    new PersonApplication(context) with LagomDevModeComponents
 
   override def describeService = Some(readDescriptor[PersonService])
 }
 
-abstract class TimeTrackerApplication(context: LagomApplicationContext)
+/**
+  * represents the web service application
+  */
+abstract class PersonApplication(context: LagomApplicationContext)
   extends LagomApplication(context)
-    //  with CassandraPersistenceComponents
+    with CassandraPersistenceComponents
     //  with LagomKafkaComponents
-      with AhcWSComponents
-{
+    with AhcWSComponents {
   /**
     * binds the [[PersonServiceImpl]] to the [[PersonService]] api
     *
-    * @return a server
+    * @return the server
     */
   override lazy val lagomServer: LagomServer = serverFor[PersonService](wire[PersonServiceImpl])
 
   /**
-    * needed by the [[CassandraPersistenceComponents]] to be able to serialize/deserialize to/from cassandra
+    * needed by the [[CassandraPersistenceComponents]] to be able to serialize/deserialize commands/events to/from cassandra
     */
-//  override lazy val jsonSerializerRegistry = PersonSerializerRegistry
+  override lazy val jsonSerializerRegistry = new JsonSerializerRegistry {
+    override def serializers: immutable.Seq[JsonSerializer[_]] = PersonCommand.serializers ++ PersonEvent.serializers ++ immutable.Seq(JsonSerializer(Json.format[PersonState]))
+  }
+
+  /**
+    * create lookups for entity instances
+    *
+    * see [[PersonServiceImpl]] for example of looking up an entity
+    */
+  persistentEntityRegistry.register(wire[Person])
 }
 

@@ -9,8 +9,9 @@ import com.lightbend.lagom.scaladsl.api.transport.{ExceptionMessage, TransportEr
   *
   */
 sealed trait PersonServiceException extends Exception {
-  def reason: String
   override lazy val getMessage: String = reason
+
+  def reason: String
 }
 
 case class InternalError(id: String, cause: Exception) extends PersonServiceException {

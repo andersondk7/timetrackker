@@ -3,7 +3,7 @@ package org.dka.tutorial.lagom.timetracker.person.api
 import play.api.libs.json.{Format, Json}
 
 /**
-  * profile information on a person
+  * api (ie. wire) representation profile information on a person
   *
   * @param id globally unique id of the person
   * @param name name by which the person is known to others
@@ -14,5 +14,8 @@ case class PersonProfile(id: String, name: String, email: String, textNumber: Op
 }
 
 object PersonProfile {
+  /**
+    * wire representation as Json
+    */
   implicit val format: Format[PersonProfile] = Json.format[PersonProfile]
 }
