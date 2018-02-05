@@ -1,7 +1,5 @@
 package org.dka.tutorial.lagom.timetracker.person.impl
 
-import java.util.UUID
-
 import org.dka.tutorial.lagom.timetracker.person.api.PersonProfile
 
 import scala.language.implicitConversions

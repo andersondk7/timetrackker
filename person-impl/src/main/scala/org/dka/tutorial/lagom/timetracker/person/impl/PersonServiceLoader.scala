@@ -4,14 +4,12 @@ import com.lightbend.lagom.scaladsl.api.ServiceLocator
 import com.lightbend.lagom.scaladsl.api.ServiceLocator.NoServiceLocator
 import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
 import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraPersistenceComponents
-import com.lightbend.lagom.scaladsl.playjson.{JsonSerializer, JsonSerializerRegistry}
+import com.lightbend.lagom.scaladsl.playjson.JsonSerializerRegistry
 import com.lightbend.lagom.scaladsl.server.{LagomApplication, LagomApplicationContext, LagomApplicationLoader, LagomServer}
 import com.softwaremill.macwire._
 import org.dka.tutorial.lagom.timetracker.person.api.PersonService
-import play.api.libs.json.Json
 import play.api.libs.ws.ahc.AhcWSComponents
 
-import scala.collection.immutable
 
 /**
   * load the [[PersonApplication]] application
@@ -48,9 +46,7 @@ abstract class PersonApplication(context: LagomApplicationContext)
   /**
     * needed by the [[CassandraPersistenceComponents]] to be able to serialize/deserialize commands/events to/from cassandra
     */
-  override lazy val jsonSerializerRegistry = new JsonSerializerRegistry {
-    override def serializers: immutable.Seq[JsonSerializer[_]] = PersonCommand.serializers ++ PersonEvent.serializers ++ immutable.Seq(JsonSerializer(Json.format[PersonState]))
-  }
+  override lazy val jsonSerializerRegistry: JsonSerializerRegistry = PersonSerializerRegistry
 
   /**
     * create lookups for entity instances
