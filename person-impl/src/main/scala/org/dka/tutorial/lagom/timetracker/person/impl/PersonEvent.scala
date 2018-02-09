@@ -11,11 +11,23 @@ import scala.collection.immutable
   * Events for a person
   */
 sealed trait PersonEvent extends AggregateEvent[PersonEvent] {
-  def aggregateTag: AggregateEventTag[PersonEvent] = PersonEvent.Tag
+  override def aggregateTag: AggregateEventTag[PersonEvent] = PersonEvent.PersonEventTag
+
+  /**
+    * @return id of the person to whom the [[PersonEvent]] applies
+    */
+  def id: String
 }
 
 object PersonEvent {
-  val Tag: AggregateEventTag[PersonEvent] = AggregateEventTag[PersonEvent]
+  /**
+    * enable read-side consumption of these events
+    *
+    * for now, consume events sequentially, add shards later
+    *
+    */
+  val PersonEventTag: AggregateEventTag[PersonEvent] = AggregateEventTag[PersonEvent]
+
   /**
     * rather than put the serializers in the derived [[PersonEvent]] definitions,
     * put them all here so that:
@@ -32,11 +44,11 @@ object PersonEvent {
 }
 
 
-final case class PersonCreated(id: String, data: PersonData) extends PersonEvent
+final case class PersonCreated(override val id: String, data: PersonData) extends PersonEvent
 
-final case class NameChanged(name: String) extends PersonEvent
+final case class NameChanged(override val id: String, name: String) extends PersonEvent
 
-final case class EmailChanged(email: String) extends PersonEvent
+final case class EmailChanged(override val id: String, email: String) extends PersonEvent
 
-final case class TextNumberChanged(textNumber: Option[String]) extends PersonEvent
+final case class TextNumberChanged(override val id: String, textNumber: Option[String]) extends PersonEvent
 

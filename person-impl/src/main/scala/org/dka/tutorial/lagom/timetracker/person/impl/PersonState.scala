@@ -7,6 +7,8 @@ import scala.language.implicitConversions
 /**
   * persistent data for a person
   *
+  * this is what is built from the events in the event store to get the current state of a [[Person]]
+  *
   * @param id         globally unique id of the person
   * @param name       name by which the person is known to others
   * @param email      email address of person

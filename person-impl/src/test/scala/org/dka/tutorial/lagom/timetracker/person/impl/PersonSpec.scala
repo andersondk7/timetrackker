@@ -53,7 +53,7 @@ class PersonSpec extends FunSpec with Matchers with BeforeAndAfterAll {
       val outcome = driver.run(ChangeName(changedName))
       val events = outcome.events
       events.size shouldBe 1 // NameChanged
-      events.head shouldBe NameChanged(changedName)
+      events.head shouldBe NameChanged(id, changedName)
 
       outcome.state shouldBe expectedState
 
@@ -69,7 +69,7 @@ class PersonSpec extends FunSpec with Matchers with BeforeAndAfterAll {
       val outcome = driver.run(ChangeEmail(changedEmail))
       val events = outcome.events
       events.size shouldBe 1 // EmailChanged
-      events.head shouldBe EmailChanged(changedEmail)
+      events.head shouldBe EmailChanged(id, changedEmail)
 
       outcome.state shouldBe expectedState
 
@@ -85,7 +85,7 @@ class PersonSpec extends FunSpec with Matchers with BeforeAndAfterAll {
       val outcome = driver.run(ChangeTextNumber(Some(changedTextNumber)))
       val events = outcome.events
       events.size shouldBe 1 // TextNumberChanged
-      events.head shouldBe TextNumberChanged(Some(changedTextNumber))
+      events.head shouldBe TextNumberChanged(id, Some(changedTextNumber))
 
       outcome.state shouldBe expectedState
 
@@ -101,7 +101,7 @@ class PersonSpec extends FunSpec with Matchers with BeforeAndAfterAll {
       val outcome = driver.run(ChangeTextNumber(None))
       val events = outcome.events
       events.size shouldBe 1 // TextNumberChanged
-      events.head shouldBe TextNumberChanged(None)
+      events.head shouldBe TextNumberChanged(id, None)
 
       outcome.state shouldBe expectedState
 

@@ -23,8 +23,10 @@ lazy val `person-impl` = (project in file("person-impl"))
   .settings(
     libraryDependencies ++= Seq(
       lagomScaladslPersistenceCassandra,
+      lagomScaladslPersistenceJdbc,
       lagomScaladslKafkaBroker,
       lagomScaladslTestKit,
+      "org.postgresql" % "postgresql" % "9.4.1212",
       macwire,
       scalaTest
     )
@@ -32,4 +34,5 @@ lazy val `person-impl` = (project in file("person-impl"))
   .settings(lagomForkedTestSettings: _*)
   .dependsOn(`person-api`)
 
-lagomCassandraCleanOnStart in ThisBuild := true
+//lagomCassandraCleanOnStart in ThisBuild := true
+lagomCassandraCleanOnStart in ThisBuild := false // so we don't have to keep creating instances...

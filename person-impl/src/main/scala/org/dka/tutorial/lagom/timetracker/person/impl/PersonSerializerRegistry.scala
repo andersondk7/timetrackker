@@ -8,6 +8,9 @@ import scala.collection.immutable
 
 
 /**
+  * lumps all of the objects that are to be serialized together
+  *
+  * separate object so that it can be used in [[PersonServiceLoader]] as well as unit tests.
   */
 object PersonSerializerRegistry extends JsonSerializerRegistry {
   override def serializers: immutable.Seq[JsonSerializer[_]] =

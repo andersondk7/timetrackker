@@ -3,11 +3,13 @@ package org.dka.tutorial.lagom.timetracker.person.impl
 import com.lightbend.lagom.scaladsl.api.ServiceLocator
 import com.lightbend.lagom.scaladsl.api.ServiceLocator.NoServiceLocator
 import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
-import com.lightbend.lagom.scaladsl.persistence.cassandra.CassandraPersistenceComponents
+import com.lightbend.lagom.scaladsl.persistence.cassandra.{CassandraPersistenceComponents, WriteSideCassandraPersistenceComponents}
+import com.lightbend.lagom.scaladsl.persistence.jdbc.ReadSideJdbcPersistenceComponents
 import com.lightbend.lagom.scaladsl.playjson.JsonSerializerRegistry
 import com.lightbend.lagom.scaladsl.server.{LagomApplication, LagomApplicationContext, LagomApplicationLoader, LagomServer}
 import com.softwaremill.macwire._
 import org.dka.tutorial.lagom.timetracker.person.api.PersonService
+import play.api.db.{ConnectionPool, HikariCPConnectionPool}
 import play.api.libs.ws.ahc.AhcWSComponents
 
 
@@ -33,9 +35,13 @@ class PersonServiceLoader extends LagomApplicationLoader {
   */
 abstract class PersonApplication(context: LagomApplicationContext)
   extends LagomApplication(context)
-    with CassandraPersistenceComponents
+    with WriteSideCassandraPersistenceComponents // commands/events are written to Cassandra
+    with ReadSideJdbcPersistenceComponents // query side tables are in Postgres
     //  with LagomKafkaComponents
     with AhcWSComponents {
+
+  override def connectionPool: ConnectionPool = wire[HikariCPConnectionPool] // read from the application.conf (thanks to play)
+
   /**
     * binds the [[PersonServiceImpl]] to the [[PersonService]] api
     *
