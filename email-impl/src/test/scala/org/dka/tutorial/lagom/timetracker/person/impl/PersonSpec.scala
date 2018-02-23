@@ -42,7 +42,7 @@ class PersonSpec extends FunSpec with Matchers with BeforeAndAfterAll {
       outcome.state shouldBe PersonState(id, initialData.name, initialData.email, initialData.textNumber)
 
       val sideEffects = outcome.sideEffects
-      sideEffects.size shouldBe 1 // the reply, which is the new personId
+      sideEffects.size shouldBe 1 // the reply, which is the new id
       sideEffects.head.asInstanceOf[Reply].msg shouldBe id
 
       val issues = outcome.issues

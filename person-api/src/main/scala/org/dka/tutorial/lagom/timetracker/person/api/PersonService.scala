@@ -1,6 +1,8 @@
 package org.dka.tutorial.lagom.timetracker.person.api
 
 import akka.NotUsed
+import com.lightbend.lagom.scaladsl.api.broker.Topic
+import com.lightbend.lagom.scaladsl.api.broker.kafka.{KafkaProperties, PartitionKeyStrategy}
 import com.lightbend.lagom.scaladsl.api.transport.Method
 import com.lightbend.lagom.scaladsl.api.{Descriptor, Service, ServiceCall}
 
@@ -18,14 +20,20 @@ trait PersonService extends Service {
   override final def descriptor: Descriptor =
     named("person")
       .withCalls(
-        pathCall("/person/profile/:id", profile _),
+        pathCall("/person/profile/:personId", profile _),
         restCall(Method.POST, "/person", create _),
-        restCall(Method.PUT, "/person/:id/name/:name", updateName _),
-        restCall(Method.PUT, "/person/:id/email/:email", updateEmail _),
-        restCall(Method.PUT, "/person/:id/textNumber/:textNumber", updateTextNumber _),
-        restCall(Method.DELETE, "/person/:id/textNumber", deleteTextNumber _),
+        restCall(Method.PUT, "/person/:personId/name/:name", updateName _),
+        restCall(Method.PUT, "/person/:personId/email/:email", updateEmail _),
+        restCall(Method.PUT, "/person/:personId/textNumber/:textNumber", updateTextNumber _),
+        restCall(Method.DELETE, "/person/:personId/textNumber", deleteTextNumber _),
         restCall(Method.GET, "/profiles", profileSummaries)
       )
+        .withTopics(
+          topic(PersonService.PERSON_TOPIC, personTopic())
+            .addProperty(
+              KafkaProperties.partitionKeyStrategy, PartitionKeyStrategy[PersonMessage](_.personId)
+            )
+        )
       .withAutoAcl(true)
 
   // ---------------------------------------------------------
@@ -33,13 +41,13 @@ trait PersonService extends Service {
   // ---------------------------------------------------------
 
   /**
-    * @return [[PersonProfile]] for given id
+    * @return [[PersonProfile]] for given personId
     */
   def profile(id: String): ServiceCall[NotUsed, PersonProfile]
 
   /**
     * creates a new person from [[PersonData]] as json in the request body
-    * @return new person's id
+    * @return new person's personId
     */
   def create(): ServiceCall[PersonData, String]
 
@@ -80,5 +88,13 @@ trait PersonService extends Service {
     * @return [[PersonProfile]] for all persons
     */
   def profileSummaries: ServiceCall[NotUsed, Seq[PersonProfile]]
+
+  // ---------------------------------------------------------
+  // topics
+  // ---------------------------------------------------------
+  def personTopic() : Topic[PersonMessage]
 }
 
+object PersonService {
+  val PERSON_TOPIC = "personCreated"
+}

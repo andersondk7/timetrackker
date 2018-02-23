@@ -2,6 +2,7 @@ package org.dka.tutorial.lagom.timetracker.person.impl
 
 import com.lightbend.lagom.scaladsl.persistence.PersistentEntity
 import org.dka.tutorial.lagom.timetracker.person.api.PersonProfile
+import akka.event.slf4j.Logger
 
 /**
   * Entity
@@ -10,6 +11,8 @@ class Person extends PersistentEntity {
   override type Command = PersonCommand
   override type Event = PersonEvent
   override type State = PersonState
+
+  private val logger = Logger.apply(this.getClass.getName)
 
   /**
     * used when there is no previous state
@@ -32,19 +35,24 @@ class Person extends PersistentEntity {
       */
     .onCommand[Create, String] {
       case (Create(id, data), ctx, _) =>
-        ctx.thenPersist(PersonCreated(id, data))(_ => ctx.reply(id))
+        val profile = PersonProfile(id, data)
+        ctx.thenPersist(PersonCreatedEvent(profile))(_ => ctx.reply(id))
       }
     .onCommand[ChangeName, PersonProfile] {
       case (ChangeName(updatedName), ctx, state) =>
-        ctx.thenPersist(NameChanged(state.id, updatedName))(_ => ctx.reply(state.copy(name = updatedName)))
+        val updated = state.copy(name = updatedName)
+        ctx.thenPersist(NameChangedEvent(updated))(_ => ctx.reply(updated))
       }
     .onCommand[ChangeEmail, PersonProfile] {
       case (ChangeEmail(updatedEmail), ctx, state) =>
-        ctx.thenPersist(EmailChanged(state.id, updatedEmail))(_ => ctx.reply(state.copy(email = updatedEmail)))
+        val updated = state.copy(email = updatedEmail)
+        logger.info(s"TRACE:  ChangeEmail ($updatedEmail on state: $state")
+        ctx.thenPersist(EmailChangedEvent(updated))(_ => ctx.reply(updated))
       }
     .onCommand[ChangeTextNumber, PersonProfile] {
       case (ChangeTextNumber(updatedTextNumber), ctx, state) =>
-        ctx.thenPersist(TextNumberChanged(state.id, updatedTextNumber))(_ => ctx.reply(state.copy(textNumber = updatedTextNumber)))
+        val updated = state.copy(textNumber = updatedTextNumber)
+        ctx.thenPersist(TextNumberChangedEvent(updated))(_ => ctx.reply(updated))
       }
     /*
      commands that don't change the state
@@ -59,14 +67,16 @@ class Person extends PersistentEntity {
        return new state
      */
     .onEvent {
-      case (NameChanged(id, updatedName), state) =>
-        state.copy(name = updatedName)
-      case (EmailChanged(id, updatedEmail), state) =>
-        state.copy(email = updatedEmail)
-      case (TextNumberChanged(id, updatedTextNumber), state) =>
-        state.copy(textNumber = updatedTextNumber)
-      case (PersonCreated(id, data), _) =>
-        PersonState(id, data.name, data.email, data.textNumber)
+      case (NameChangedEvent(profile), state) =>
+        state.copy(name = profile.name)
+      case (EmailChangedEvent(profile), state) =>
+        logger.info(s"TRACE:  EmailChanged ($profile) on state: $state")
+        state.copy(email = profile.email)
+      case (TextNumberChangedEvent(profile), state) =>
+        state.copy(textNumber = profile.textNumber)
+      case (PersonCreatedEvent(profile), _) =>
+        logger.info(s"TRACE: PersonCreated($profile)")
+        PersonState(profile)
     }
   // @formatter:on
 }

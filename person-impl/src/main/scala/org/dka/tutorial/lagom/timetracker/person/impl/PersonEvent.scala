@@ -2,7 +2,7 @@ package org.dka.tutorial.lagom.timetracker.person.impl
 
 import com.lightbend.lagom.scaladsl.persistence.{AggregateEvent, AggregateEventTag}
 import com.lightbend.lagom.scaladsl.playjson.JsonSerializer
-import org.dka.tutorial.lagom.timetracker.person.api.PersonData
+import org.dka.tutorial.lagom.timetracker.person.api._
 import play.api.libs.json.Json
 
 import scala.collection.immutable
@@ -14,19 +14,21 @@ sealed trait PersonEvent extends AggregateEvent[PersonEvent] {
   override def aggregateTag: AggregateEventTag[PersonEvent] = PersonEvent.PersonEventTag
 
   /**
-    * @return id of the person to whom the [[PersonEvent]] applies
+    * @return personId of the person to whom the [[PersonEvent]] applies
     */
-  def id: String
+  def profile: PersonProfile
 }
+
 
 object PersonEvent {
   /**
     * enable read-side consumption of these events
-    *
-    * for now, consume events sequentially, add shards later
-    *
     */
   val PersonEventTag: AggregateEventTag[PersonEvent] = AggregateEventTag[PersonEvent]
+//  val PersonCreatedTag: AggregateEventTag[PersonCreatedEvent] = AggregateEventTag[PersonCreatedEvent]
+//  val NameChangedTag: AggregateEventTag[NameChangedEvent] = AggregateEventTag[NameChangedEvent]
+//  val EmailChangedTag: AggregateEventTag[EmailChangedEvent] = AggregateEventTag[EmailChangedEvent]
+//  val TextNumberChangedTag: AggregateEventTag[TextNumberChangedEvent] = AggregateEventTag[TextNumberChangedEvent]
 
   /**
     * rather than put the serializers in the derived [[PersonEvent]] definitions,
@@ -36,19 +38,19 @@ object PersonEvent {
     * keeps code for [[PersonEvent]] implementations simpler because we don't need companion objects
     */
   val serializers: immutable.Seq[JsonSerializer[_]] = immutable.Seq(
-    JsonSerializer(Json.format[PersonCreated]),
-    JsonSerializer(Json.format[NameChanged]),
-    JsonSerializer(Json.format[EmailChanged]),
-    JsonSerializer(Json.format[TextNumberChanged])
+    JsonSerializer(Json.format[PersonCreatedEvent]),
+    JsonSerializer(Json.format[NameChangedEvent]),
+    JsonSerializer(Json.format[EmailChangedEvent]),
+    JsonSerializer(Json.format[TextNumberChangedEvent])
   )
 }
 
 
-final case class PersonCreated(override val id: String, data: PersonData) extends PersonEvent
+final case class PersonCreatedEvent(override val profile: PersonProfile) extends PersonEvent {}
 
-final case class NameChanged(override val id: String, name: String) extends PersonEvent
+final case class NameChangedEvent(override val profile: PersonProfile) extends PersonEvent {}
 
-final case class EmailChanged(override val id: String, email: String) extends PersonEvent
+final case class EmailChangedEvent(override val profile: PersonProfile) extends PersonEvent {}
 
-final case class TextNumberChanged(override val id: String, textNumber: Option[String]) extends PersonEvent
+final case class TextNumberChangedEvent(override val profile: PersonProfile) extends PersonEvent {}
 

@@ -15,11 +15,11 @@ sealed trait PersonServiceException extends Exception {
 }
 
 case class InternalError(id: String, cause: Exception) extends PersonServiceException {
-  override val reason: String = s"id: $id caused exception: $cause"
+  override val reason: String = s"personId: $id caused exception: $cause"
 }
 
 case class PersonNotFoundException(id: String)
-  extends TransportException(TransportErrorCode.NotFound, new ExceptionMessage(PersonNotFoundException.getClass.getSimpleName, s"person with id: $id does not exist"))
+  extends TransportException(TransportErrorCode.NotFound, new ExceptionMessage(PersonNotFoundException.getClass.getSimpleName, s"person with personId: $id does not exist"))
     with PersonServiceException {
   override val reason: String = this.exceptionMessage.name
 }

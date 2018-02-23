@@ -16,8 +16,8 @@ import scala.concurrent.ExecutionContext
   * ''EventHander'' methods in this class.  The ''EventHandler'' methods are passed to the handler by calling ''setHandler'' method
   * on the builder provided by the [[jdbcReadSide]]
   *
-  * @param jdbcReadSide  read side support
-  * @param ec execution context in which the database calls will execute
+  * @param jdbcReadSide read side support
+  * @param ec           execution context in which the database calls will execute
   */
 class PersonEventProcessor(jdbcReadSide: JdbcReadSide)(implicit ec: ExecutionContext) extends ReadSideProcessor[PersonEvent] {
 
@@ -30,43 +30,43 @@ class PersonEventProcessor(jdbcReadSide: JdbcReadSide)(implicit ec: ExecutionCon
    *
    */
   private def processPersonCreated(connection: Connection,
-                                   eventElement: EventStreamElement[PersonCreated]): Unit = {
+                                   eventElement: EventStreamElement[PersonCreatedEvent]): Unit = {
     tryWith(connection.prepareStatement(
       "INSERT INTO person_profile (id, name, email, textNumber) values(?, ?, ?, ?)")) { statement =>
-      statement.setString(1, eventElement.event.id)
-      statement.setString(2, eventElement.event.data.name)
-      statement.setString(3, eventElement.event.data.email)
-      statement.setString(4, eventElement.event.data.textNumber.getOrElse(""))
+      statement.setString(1, eventElement.event.profile.id)
+      statement.setString(2, eventElement.event.profile.name)
+      statement.setString(3, eventElement.event.profile.email)
+      statement.setString(4, eventElement.event.profile.textNumber.getOrElse(""))
       statement.execute()
     }
   }
 
   private def processNameChanged(connection: Connection,
-                                 eventElement: EventStreamElement[NameChanged]): Unit = {
+                                 eventElement: EventStreamElement[NameChangedEvent]): Unit = {
     tryWith(connection.prepareStatement(
       "UPDATE person_profile SET name = ? where id = ?")) { statement =>
-      statement.setString(1, eventElement.event.name)
-      statement.setString(2, eventElement.event.id)
+      statement.setString(1, eventElement.event.profile.name)
+      statement.setString(2, eventElement.event.profile.id)
       statement.execute()
     }
   }
 
   private def processEmailChanged(connection: Connection,
-                                  eventElement: EventStreamElement[EmailChanged]): Unit = {
+                                  eventElement: EventStreamElement[EmailChangedEvent]): Unit = {
     tryWith(connection.prepareStatement(
       "UPDATE person_profile SET email = ? where id = ?")) { statement =>
-      statement.setString(1, eventElement.event.email)
-      statement.setString(2, eventElement.event.id)
+      statement.setString(1, eventElement.event.profile.email)
+      statement.setString(2, eventElement.event.profile.id)
       statement.execute()
     }
   }
 
   private def processTextNumberChanged(connection: Connection,
-                                       eventElement: EventStreamElement[TextNumberChanged]): Unit = {
+                                       eventElement: EventStreamElement[TextNumberChangedEvent]): Unit = {
     tryWith(connection.prepareStatement(
       "UPDATE person_profile SET textnumber = ? where id = ?")) { statement =>
-      statement.setString(1, eventElement.event.textNumber.getOrElse(""))
-      statement.setString(2, eventElement.event.id)
+      statement.setString(1, eventElement.event.profile.textNumber.getOrElse(""))
+      statement.setString(2, eventElement.event.profile.id)
       statement.executeUpdate()
     }
   }
@@ -79,17 +79,17 @@ class PersonEventProcessor(jdbcReadSide: JdbcReadSide)(implicit ec: ExecutionCon
     jdbcReadSide.builder[PersonEvent]("personReadSideId")
       // since we create the tables manually, we do not need the setGlobalPrepare or the setPrepare methods
       //  so we just need to add a handler for every [[PersonEvent]] that causes a change on the ''query'' side
-      .setEventHandler[PersonCreated](processPersonCreated)
-      .setEventHandler[NameChanged](processNameChanged)
-      .setEventHandler[EmailChanged](processEmailChanged)
-      .setEventHandler[TextNumberChanged](processTextNumberChanged)
+      .setEventHandler[PersonCreatedEvent](processPersonCreated)
+      .setEventHandler[NameChangedEvent](processNameChanged)
+      .setEventHandler[EmailChangedEvent](processEmailChanged)
+      .setEventHandler[TextNumberChangedEvent](processTextNumberChanged)
       .build()
 
   /**
     * since we are not sharding, there will be only '''one''' [[PersonEventProcessor]] and
     * all events will be processed sequentially
     *
-    * @return all Tags for [[PersonEvent]]
+    * @return all Tags that this processor should respond to
     */
   override def aggregateTags: Set[AggregateEventTag[PersonEvent]] = Set(PersonEvent.PersonEventTag)
 }

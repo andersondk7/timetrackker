@@ -5,7 +5,7 @@ import play.api.libs.json.{Format, Json}
 /**
   * api (ie. wire) representation profile information on a person
   *
-  * @param id         globally unique id of the person
+  * @param id         globally unique personId of the person
   * @param name       name by which the person is known to others
   * @param email      email address of person
   * @param textNumber optional sms text number
@@ -18,4 +18,5 @@ object PersonProfile {
     * wire representation as Json
     */
   implicit val format: Format[PersonProfile] = Json.format[PersonProfile]
+  def apply(id: String, data: PersonData): PersonProfile = PersonProfile(id, data.name, data.email, data.textNumber)
 }
